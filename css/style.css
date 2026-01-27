@@ -257,6 +257,27 @@ body {
     opacity: 0.9;
 }
 
+.vaga-horario {
+    background: #E3F2FD;
+    color: #1565C0;
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-top: 20px;
+    font-size: 0.9rem;
+    border-left: 4px solid #1976D2;
+}
+
+.vaga-horario i {
+    margin-right: 8px;
+    color: #1976D2;
+}
+
+.vaga-horario small {
+    display: block;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
 /* ===== FORM SECTION ===== */
 .form-section {
     background: var(--white);
