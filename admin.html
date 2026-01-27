@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Passos do Saber</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>Passos do Saber</h1>
+                <p>Painel Administrativo</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="admin-senha"><i class="fas fa-lock"></i> Senha de Acesso</label>
+                    <input type="password" id="admin-senha" required placeholder="Digite a senha">
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+                <p id="login-erro" class="login-erro hidden">Senha incorreta!</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="admin-dashboard hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-graduation-cap"></i>
+                <h2>Passos do Saber</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-filter="todos">
+                    <i class="fas fa-users"></i> Todos os Candidatos
+                </a>
+                <a href="#" class="nav-item" data-filter="professor">
+                    <i class="fas fa-chalkboard-teacher"></i> Professores
+                </a>
+                <a href="#" class="nav-item" data-filter="vendedor">
+                    <i class="fas fa-handshake"></i> Vendedores
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="admin-header">
+                <h1 id="page-title"><i class="fas fa-users"></i> Todos os Candidatos</h1>
+                <div class="header-actions">
+                    <button id="btn-refresh" class="btn-action">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                    <button id="btn-export" class="btn-action">
+                        <i class="fas fa-download"></i> Exportar CSV
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-candidatos">0</h3>
+                        <p>Total de Candidatos</p>
+                    </div>
+                </div>
+                <div class="stat-card professores">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-professores">0</h3>
+                        <p>Professores</p>
+                    </div>
+                </div>
+                <div class="stat-card vendedores">
+                    <div class="stat-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-vendedores">0</h3>
+                        <p>Vendedores</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="filter-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por nome, email ou telefone...">
+                </div>
+                <select id="order-by" class="filter-select">
+                    <option value="recente">Mais recentes</option>
+                    <option value="antigo">Mais antigos</option>
+                    <option value="nome">Nome A-Z</option>
+                </select>
+            </div>
+
+            <!-- Candidates Table -->
+            <div class="table-container">
+                <table class="candidates-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Vaga</th>
+                            <th>Contato</th>
+                            <th>Idade</th>
+                            <th>Bairro</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidates-body">
+                        <!-- Candidatos serão inseridos aqui -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state hidden">
+                <i class="fas fa-inbox"></i>
+                <h3>Nenhum candidato encontrado</h3>
+                <p>Ainda não há candidaturas registradas.</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Carregando candidatos...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="modal-detalhes" class="modal hidden">
+        <div class="modal-content modal-detalhes">
+            <button class="modal-close" onclick="fecharModalDetalhes()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="detalhes-content">
+                <!-- Conteúdo será inserido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="modal-excluir" class="modal hidden">
+        <div class="modal-content modal-confirm">
+            <div class="modal-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir este candidato?</p>
+            <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            <div class="modal-actions">
+                <button onclick="fecharModalExcluir()" class="btn-cancelar">Cancelar</button>
+                <button id="btn-confirmar-excluir" class="btn-excluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
