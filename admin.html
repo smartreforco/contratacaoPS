@@ -41,18 +41,21 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-filter="todos">
-                    <i class="fas fa-users"></i> Todos os Candidatos
+                    <i class="fas fa-users"></i> <span>Todos os Candidatos</span>
                 </a>
                 <a href="#" class="nav-item" data-filter="professor">
-                    <i class="fas fa-chalkboard-teacher"></i> Professores
+                    <i class="fas fa-chalkboard-teacher"></i> <span>Professores</span>
                 </a>
                 <a href="#" class="nav-item" data-filter="vendedor">
-                    <i class="fas fa-handshake"></i> Vendedores
+                    <i class="fas fa-handshake"></i> <span>Vendedores</span>
+                </a>
+                <a href="#" class="nav-item" data-filter="favoritos">
+                    <i class="fas fa-star"></i> <span>Favoritos</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
                 <button id="btn-logout" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Sair
+                    <i class="fas fa-sign-out-alt"></i> <span>Sair</span>
                 </button>
             </div>
         </aside>
@@ -60,16 +63,42 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="admin-header">
-                <h1 id="page-title"><i class="fas fa-users"></i> Todos os Candidatos</h1>
+                <div class="header-left">
+                    <button id="btn-menu-toggle" class="btn-menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="page-title"><i class="fas fa-users"></i> Todos os Candidatos</h1>
+                </div>
                 <div class="header-actions">
                     <button id="btn-refresh" class="btn-action">
-                        <i class="fas fa-sync-alt"></i> Atualizar
+                        <i class="fas fa-sync-alt"></i> <span>Atualizar</span>
                     </button>
                     <button id="btn-export" class="btn-action">
-                        <i class="fas fa-download"></i> Exportar CSV
+                        <i class="fas fa-download"></i> <span>Exportar CSV</span>
                     </button>
                 </div>
             </header>
+
+            <!-- Barra de Seleção Múltipla -->
+            <div id="selection-bar" class="selection-bar hidden">
+                <div class="selection-info">
+                    <span id="selection-count">0</span> selecionado(s)
+                </div>
+                <div class="selection-actions">
+                    <button id="btn-fav-selected" class="btn-selection-action fav">
+                        <i class="fas fa-star"></i> Favoritar
+                    </button>
+                    <button id="btn-unfav-selected" class="btn-selection-action unfav">
+                        <i class="far fa-star"></i> Remover Favorito
+                    </button>
+                    <button id="btn-whatsapp-selected" class="btn-selection-action whatsapp">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button id="btn-cancel-selection" class="btn-selection-action cancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
 
             <!-- Stats Cards -->
             <div class="stats-container">
@@ -79,7 +108,7 @@
                     </div>
                     <div class="stat-info">
                         <h3 id="total-candidatos">0</h3>
-                        <p>Total de Candidatos</p>
+                        <p>Total</p>
                     </div>
                 </div>
                 <div class="stat-card professores">
@@ -98,6 +127,15 @@
                     <div class="stat-info">
                         <h3 id="total-vendedores">0</h3>
                         <p>Vendedores</p>
+                    </div>
+                </div>
+                <div class="stat-card favoritos">
+                    <div class="stat-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-favoritos">0</h3>
+                        <p>Favoritos</p>
                     </div>
                 </div>
             </div>
@@ -120,12 +158,19 @@
                 <table class="candidates-table">
                     <thead>
                         <tr>
+                            <th class="th-checkbox">
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" id="select-all">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </th>
+                            <th class="th-fav"><i class="fas fa-star"></i></th>
                             <th>Nome</th>
                             <th>Vaga</th>
-                            <th>Contato</th>
-                            <th>Idade</th>
-                            <th>Bairro</th>
-                            <th>Data</th>
+                            <th class="hide-mobile">Contato</th>
+                            <th class="hide-tablet">Idade</th>
+                            <th class="hide-tablet">Bairro</th>
+                            <th class="hide-mobile">Data</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -177,6 +222,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Overlay para sidebar mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
 
     <script src="js/supabase-config.js"></script>
     <script src="js/admin.js"></script>

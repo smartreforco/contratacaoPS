@@ -5,10 +5,38 @@
 let candidatosData = [];
 let filtroAtual = 'todos';
 let candidatoParaExcluir = null;
+let favoritosIds = [];
+let selectedIds = [];
 
 document.addEventListener('DOMContentLoaded', function() {
+    carregarFavoritos();
     initAdmin();
 });
+
+function carregarFavoritos() {
+    const saved = localStorage.getItem('candidatos_favoritos');
+    favoritosIds = saved ? JSON.parse(saved) : [];
+}
+
+function salvarFavoritos() {
+    localStorage.setItem('candidatos_favoritos', JSON.stringify(favoritosIds));
+}
+
+function toggleFavorito(id) {
+    const index = favoritosIds.indexOf(id);
+    if (index === -1) {
+        favoritosIds.push(id);
+    } else {
+        favoritosIds.splice(index, 1);
+    }
+    salvarFavoritos();
+    atualizarEstatisticas();
+    filtrarEExibir();
+}
+
+function isFavorito(id) {
+    return favoritosIds.includes(id);
+}
 
 function initAdmin() {
     const loginForm = document.getElementById('login-form');
@@ -18,6 +46,14 @@ function initAdmin() {
     const searchInput = document.getElementById('search-input');
     const orderBy = document.getElementById('order-by');
     const navItems = document.querySelectorAll('.nav-item');
+    const btnMenuToggle = document.getElementById('btn-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const selectAll = document.getElementById('select-all');
+    const btnFavSelected = document.getElementById('btn-fav-selected');
+    const btnUnfavSelected = document.getElementById('btn-unfav-selected');
+    const btnWhatsappSelected = document.getElementById('btn-whatsapp-selected');
+    const btnCancelSelection = document.getElementById('btn-cancel-selection');
 
     // Verificar se já está logado
     if (sessionStorage.getItem('admin_logged') === 'true') {
@@ -46,6 +82,21 @@ function initAdmin() {
         location.reload();
     });
 
+    // Menu Toggle (Mobile/Tablet)
+    if (btnMenuToggle) {
+        btnMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+
     // Atualizar
     btnRefresh.addEventListener('click', carregarCandidatos);
 
@@ -73,8 +124,104 @@ function initAdmin() {
             filtroAtual = this.dataset.filter;
             atualizarTitulo();
             filtrarEExibir();
+
+            // Fechar sidebar no mobile
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
         });
     });
+
+    // Select All
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.candidate-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+            updateSelection();
+        });
+    }
+
+    // Favoritar selecionados
+    if (btnFavSelected) {
+        btnFavSelected.addEventListener('click', function() {
+            selectedIds.forEach(id => {
+                if (!isFavorito(id)) {
+                    favoritosIds.push(id);
+                }
+            });
+            salvarFavoritos();
+            limparSelecao();
+            atualizarEstatisticas();
+            filtrarEExibir();
+        });
+    }
+
+    // Remover favorito dos selecionados
+    if (btnUnfavSelected) {
+        btnUnfavSelected.addEventListener('click', function() {
+            selectedIds.forEach(id => {
+                const index = favoritosIds.indexOf(id);
+                if (index !== -1) {
+                    favoritosIds.splice(index, 1);
+                }
+            });
+            salvarFavoritos();
+            limparSelecao();
+            atualizarEstatisticas();
+            filtrarEExibir();
+        });
+    }
+
+    // WhatsApp para selecionados
+    if (btnWhatsappSelected) {
+        btnWhatsappSelected.addEventListener('click', function() {
+            const selectedCandidatos = candidatosData.filter(c => selectedIds.includes(c.id));
+            if (selectedCandidatos.length === 1) {
+                const telefone = selectedCandidatos[0].telefone.replace(/\D/g, '');
+                window.open(`https://wa.me/55${telefone}`, '_blank');
+            } else {
+                // Mostrar lista de contatos para copiar
+                const numeros = selectedCandidatos.map(c => `${c.nome}: ${c.telefone}`).join('\n');
+                alert('Contatos selecionados:\n\n' + numeros);
+            }
+            limparSelecao();
+        });
+    }
+
+    // Cancelar seleção
+    if (btnCancelSelection) {
+        btnCancelSelection.addEventListener('click', limparSelecao);
+    }
+}
+
+function updateSelection() {
+    const checkboxes = document.querySelectorAll('.candidate-checkbox:checked');
+    selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+    
+    const selectionBar = document.getElementById('selection-bar');
+    const selectionCount = document.getElementById('selection-count');
+    
+    if (selectedIds.length > 0) {
+        selectionBar.classList.remove('hidden');
+        selectionCount.textContent = selectedIds.length;
+    } else {
+        selectionBar.classList.add('hidden');
+    }
+
+    // Atualizar select all
+    const allCheckboxes = document.querySelectorAll('.candidate-checkbox');
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    }
+}
+
+function limparSelecao() {
+    selectedIds = [];
+    const checkboxes = document.querySelectorAll('.candidate-checkbox, #select-all');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('selection-bar').classList.add('hidden');
 }
 
 function mostrarDashboard() {
@@ -126,10 +273,12 @@ function atualizarEstatisticas() {
     const total = candidatosData.length;
     const professores = candidatosData.filter(c => c.vaga === 'professor').length;
     const vendedores = candidatosData.filter(c => c.vaga === 'vendedor').length;
+    const favoritos = candidatosData.filter(c => isFavorito(c.id)).length;
 
     document.getElementById('total-candidatos').textContent = total;
     document.getElementById('total-professores').textContent = professores;
     document.getElementById('total-vendedores').textContent = vendedores;
+    document.getElementById('total-favoritos').textContent = favoritos;
 }
 
 function atualizarTitulo() {
@@ -137,7 +286,8 @@ function atualizarTitulo() {
     const titulos = {
         'todos': '<i class="fas fa-users"></i> Todos os Candidatos',
         'professor': '<i class="fas fa-chalkboard-teacher"></i> Candidatos a Professor',
-        'vendedor': '<i class="fas fa-handshake"></i> Candidatos a Vendedor'
+        'vendedor': '<i class="fas fa-handshake"></i> Candidatos a Vendedor',
+        'favoritos': '<i class="fas fa-star"></i> Favoritos'
     };
     pageTitle.innerHTML = titulos[filtroAtual];
 }
@@ -148,9 +298,11 @@ function filtrarEExibir() {
     const tableContainer = document.querySelector('.table-container');
     const emptyState = document.getElementById('empty-state');
 
-    // Filtrar por vaga
+    // Filtrar por vaga ou favoritos
     let candidatosFiltrados = candidatosData;
-    if (filtroAtual !== 'todos') {
+    if (filtroAtual === 'favoritos') {
+        candidatosFiltrados = candidatosData.filter(c => isFavorito(c.id));
+    } else if (filtroAtual !== 'todos') {
         candidatosFiltrados = candidatosData.filter(c => c.vaga === filtroAtual);
     }
 
@@ -170,15 +322,22 @@ function filtrarEExibir() {
     if (candidatosFiltrados.length === 0) {
         tableContainer.style.display = 'none';
         emptyState.classList.remove('hidden');
-        emptyState.querySelector('h3').textContent = 'Nenhum candidato encontrado';
-        emptyState.querySelector('p').textContent = searchTerm 
-            ? 'Tente uma busca diferente.' 
-            : 'Ainda não há candidaturas registradas.';
+        emptyState.querySelector('h3').textContent = filtroAtual === 'favoritos' 
+            ? 'Nenhum favorito' 
+            : 'Nenhum candidato encontrado';
+        emptyState.querySelector('p').textContent = filtroAtual === 'favoritos'
+            ? 'Marque candidatos como favoritos clicando na estrela.'
+            : searchTerm 
+                ? 'Tente uma busca diferente.' 
+                : 'Ainda não há candidaturas registradas.';
     } else {
         tableContainer.style.display = 'block';
         emptyState.classList.add('hidden');
         renderizarTabela(candidatosFiltrados);
     }
+
+    // Limpar seleção ao mudar filtro
+    limparSelecao();
 }
 
 function ordenarCandidatos(candidatos, ordem) {
@@ -207,8 +366,24 @@ function renderizarTabela(candidatos) {
         const tr = document.createElement('tr');
         const dataFormatada = formatarData(candidato.created_at);
         const telefoneWhatsApp = candidato.telefone.replace(/\D/g, '');
+        const ehFavorito = isFavorito(candidato.id);
+        const isSelected = selectedIds.includes(candidato.id);
+
+        if (ehFavorito) tr.classList.add('is-favorite');
+        if (isSelected) tr.classList.add('selected');
 
         tr.innerHTML = `
+            <td class="td-checkbox">
+                <label class="custom-checkbox">
+                    <input type="checkbox" class="candidate-checkbox" data-id="${candidato.id}" ${isSelected ? 'checked' : ''}>
+                    <span class="checkmark"></span>
+                </label>
+            </td>
+            <td class="td-fav">
+                <button class="btn-favorite ${ehFavorito ? 'is-favorite' : ''}" onclick="toggleFavorito(${candidato.id})" title="${ehFavorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
+                    <i class="${ehFavorito ? 'fas' : 'far'} fa-star"></i>
+                </button>
+            </td>
             <td>
                 <strong>${candidato.nome}</strong>
             </td>
@@ -217,15 +392,15 @@ function renderizarTabela(candidatos) {
                     ${candidato.vaga === 'professor' ? 'Professor' : 'Vendedor'}
                 </span>
             </td>
-            <td>
+            <td class="hide-mobile">
                 <div class="contact-info">
                     <span><i class="fas fa-envelope"></i> ${candidato.email}</span>
                     <span><i class="fas fa-phone"></i> ${candidato.telefone}</span>
                 </div>
             </td>
-            <td>${candidato.idade || '-'} anos</td>
-            <td>${candidato.bairro || '-'}</td>
-            <td>${dataFormatada}</td>
+            <td class="hide-tablet">${candidato.idade || '-'} anos</td>
+            <td class="hide-tablet">${candidato.bairro || '-'}</td>
+            <td class="hide-mobile">${dataFormatada}</td>
             <td>
                 <div class="table-actions">
                     <button class="btn-view" onclick="verDetalhes(${candidato.id})" title="Ver detalhes">
@@ -242,6 +417,11 @@ function renderizarTabela(candidatos) {
         `;
 
         tbody.appendChild(tr);
+    });
+
+    // Adicionar listeners para checkboxes
+    document.querySelectorAll('.candidate-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelection);
     });
 }
 
@@ -350,6 +530,9 @@ function verDetalhes(id) {
                     ${candidato.vaga === 'professor' ? 'Professor' : 'Vendedor'}
                 </span>
             </div>
+            <button class="btn-favorite-lg ${isFavorito(candidato.id) ? 'is-favorite' : ''}" onclick="toggleFavoritoModal(${candidato.id})" title="${isFavorito(candidato.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
+                <i class="${isFavorito(candidato.id) ? 'fas' : 'far'} fa-star"></i>
+            </button>
         </div>
 
         <div class="detalhes-section">
@@ -520,7 +703,9 @@ function exportarCSV() {
 
     // Filtrar dados atuais
     let dados = candidatosData;
-    if (filtroAtual !== 'todos') {
+    if (filtroAtual === 'favoritos') {
+        dados = candidatosData.filter(c => isFavorito(c.id));
+    } else if (filtroAtual !== 'todos') {
         dados = candidatosData.filter(c => c.vaga === filtroAtual);
     }
 
@@ -528,6 +713,7 @@ function exportarCSV() {
     const headers = [
         'Nome',
         'Vaga',
+        'Favorito',
         'Email',
         'Telefone',
         'Idade',
@@ -542,6 +728,7 @@ function exportarCSV() {
     const rows = dados.map(c => [
         c.nome,
         c.vaga,
+        isFavorito(c.id) ? 'Sim' : 'Não',
         c.email,
         c.telefone,
         c.idade || '',
@@ -572,3 +759,16 @@ document.addEventListener('click', function(e) {
         e.target.classList.add('hidden');
     }
 });
+
+// Toggle favorito no modal de detalhes
+function toggleFavoritoModal(id) {
+    toggleFavorito(id);
+    // Atualizar o botão no modal
+    const btn = document.querySelector('.btn-favorite-lg');
+    if (btn) {
+        const ehFavorito = isFavorito(id);
+        btn.classList.toggle('is-favorite', ehFavorito);
+        btn.innerHTML = `<i class="${ehFavorito ? 'fas' : 'far'} fa-star"></i>`;
+        btn.title = ehFavorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+    }
+}
