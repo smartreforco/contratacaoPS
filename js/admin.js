@@ -227,6 +227,7 @@ function limparSelecao() {
 function mostrarDashboard() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('admin-dashboard').classList.remove('hidden');
+    document.body.classList.add('logged-in');
     carregarCandidatos();
 }
 

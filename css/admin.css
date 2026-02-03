@@ -6,6 +6,10 @@
     min-height: 100vh;
 }
 
+.admin-body.logged-in {
+    background: var(--bg-color);
+}
+
 .login-container {
     min-height: 100vh;
     display: flex;
@@ -181,6 +185,7 @@
     margin-left: 280px;
     padding: 30px;
     min-height: 100vh;
+    background: var(--bg-color);
 }
 
 .admin-header {
